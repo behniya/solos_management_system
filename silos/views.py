@@ -31,19 +31,15 @@ class SiloLogView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, silo_id):
-        # Ensure the user is a manager
         if request.user.role != 'manager':
             return Response({"detail": "Permission denied."}, status=status.HTTP_403_FORBIDDEN)
 
-        # Fetch the silo using the provided ID
         silo = get_object_or_404(Silo, id=silo_id)
 
-        # Pass `silo` to the serializer context
         serializer = SiloLogSerializer(data=request.data, context={'silo': silo})
         if serializer.is_valid():
             log = serializer.save()
 
-            # Update the silo's stock
             if log.change_type == 'incoming':
                 silo.current_stock += log.amount
             elif log.change_type == 'outgoing':
